@@ -12,4 +12,6 @@ OPENAI_PWD = os.getenv("OPENAI_PWD")
 
 
 #  URLS
+OPENAI_BASE_URL = "https://chat.openai.com"
 OPENAI_LOGIN_URL = "https://chat.openai.com/auth/login"
+OPENAI_GPT4_URL = "https://chat.openai.com/?model=gpt-4"

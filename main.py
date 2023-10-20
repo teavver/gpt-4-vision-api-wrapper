@@ -19,4 +19,4 @@ driver = uc.Chrome(use_subprocess=True, options=options)
 
 if __name__ == "__main__":
     p = prompter.Prompter(driver)
-    p.login()
+    p.vision_prompt()
