@@ -9,7 +9,7 @@ def check_cookies() -> bool:
 def save_cookies(driver:WebDriver, path:str = COOKIES_FILENAME):
     cookies = driver.get_cookies()
     pickle.dump(cookies, open(path, "wb"))
-    print("[cookies] cookies saved")
+    print(f"[cookies] {len(cookies)} cookies saved")
 
 def load_cookies(driver:WebDriver, path:str = COOKIES_FILENAME):
     cookies = pickle.load(open(path, "rb"))
@@ -19,4 +19,4 @@ def load_cookies(driver:WebDriver, path:str = COOKIES_FILENAME):
             driver.add_cookie(cookie)
         except Exception as e:
             print(e)
-    print("[cookies] cookies loaded")
+    print(f"[cookies] {len(cookies)} cookies loaded")

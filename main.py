@@ -19,4 +19,4 @@ driver = uc.Chrome(use_subprocess=True, options=options)
 
 if __name__ == "__main__":
     p = prompter.Prompter(driver)
-    p.vision_prompt()
+    p.vision_prompt("test_img.png", "Describe this image")
