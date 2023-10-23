@@ -4,7 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
-import config, time, cookies, os.path
+import config, time, cookies
 
 class GPTResponse:
     def __init__(self, locator):
@@ -30,38 +30,39 @@ class Prompter:
         self.driver = driver
         self.cookies_present = cookies.check_cookies()
 
-    def find_elem_with_timeout(self, by:By, selector:str, max_timeout:int = 30):
+    def find_elem_with_timeout(self, by:By, selector:str, max_timeout:int = 10):
         try:
             element = WebDriverWait(self.driver, max_timeout).until(
-                EC.visibility_of_element_located((by, selector))
+                # EC.presence_of_element_located((by, selector))
+                EC.element_to_be_clickable((by, selector))
+                # EC.visibility_of_element_located((by, selector))
             )
             return element
-        except TimeoutError:
+        except TimeoutException:
+            print(f"[prompter] timeout - failed to find element `{selector}`")
             return None
 
     # one-time login to save all .openai.com cookies
     def init_cookies(self):
+        self.driver.save_screenshot('debug_screenshot_cookies.png')
         self.driver.get(config.OPENAI_LOGIN_URL)
         log_btn = self.find_elem_with_timeout(By.CSS_SELECTOR, '[data-testid="login-button"]')
-        if log_btn:
-            log_btn.click()
+        if not log_btn: return
+        log_btn.click()
         
         login_input = self.find_elem_with_timeout(By.ID, "username")
-        if login_input:
-            login_input.send_keys(config.OPENAI_LOGIN)
-            login_input.send_keys(Keys.RETURN)
-            # time.sleep(0.25)
+        if not login_input: return
+        login_input.send_keys(config.OPENAI_LOGIN)
+        login_input.send_keys(Keys.RETURN)
         
         pwd_input = self.find_elem_with_timeout(By.ID, "password")
-        if pwd_input:
-            pwd_input.send_keys(config.OPENAI_PWD)
-            # time.sleep(0.25)
+        if not pwd_input: return
+        pwd_input.send_keys(config.OPENAI_PWD)
 
         continue_btn = self.find_elem_with_timeout(By.CLASS_NAME, "_button-login-password")
-        if continue_btn:
-            continue_btn.click()
+        if not continue_btn: return
+        continue_btn.click()
 
-        time.sleep(1.0)
         cookies.save_cookies(self.driver)
         return
     
@@ -72,31 +73,37 @@ class Prompter:
             self.init_cookies()
         else:
             cookies.load_cookies(self.driver)
-            self.driver.refresh()
 
+        time.sleep(0.75)
+        self.driver.refresh()
+        time.sleep(0.25)
         self.driver.get(config.OPENAI_GPT4_URL)
+
+        time.sleep(5) # DEBUG
+        self.driver.save_screenshot('debug_screenshot.png')
 
         # close the welcome pop-up
         welcome_popup = self.find_elem_with_timeout(By.XPATH, '//button[.//div[text()="Okay, let’s go"]]')
-        if welcome_popup:
-            welcome_popup.click()
-            time.sleep(0.25)
+        if not welcome_popup: return
+        welcome_popup.click()
+        time.sleep(0.25)
 
         # and the second one
         search_with_imgs_popup = self.find_elem_with_timeout(By.XPATH, "//*[contains(@class, '-my-1') and contains(@class, '-mr-1') and contains(@class, 'p-1') and contains(@class, 'opacity-70')]")
-        if search_with_imgs_popup:
-            search_with_imgs_popup.click()
-            time.sleep(0.25)
+        if not search_with_imgs_popup: return
+        search_with_imgs_popup.click()
+        time.sleep(0.25)
 
         file_inputs = self.driver.find_elements(By.XPATH, '//input[@type="file"]')
-        if len(file_inputs) > 0:
-            file_inputs[0].send_keys(config.IMG_SAVE_PATH)
-            time.sleep(0.25)
+        if len(file_inputs) == 0:
+            return print("[prompter] file input not found")
+        file_inputs[0].send_keys(config.IMG_SAVE_PATH)
+        time.sleep(0.25)
             
         prompt_textarea = self.find_elem_with_timeout(By.ID, "prompt-textarea")
-        if prompt_textarea:
-            prompt_textarea.click()
-            prompt_textarea.send_keys(prompt)
+        if not prompt_textarea: return
+        prompt_textarea.click()
+        prompt_textarea.send_keys(prompt)
 
         send_btn_locator = (By.CSS_SELECTOR, 'button[data-testid="send-button"]')
         try:

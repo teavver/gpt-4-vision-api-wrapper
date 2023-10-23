@@ -18,5 +18,6 @@ def load_cookies(driver:WebDriver, path:str = COOKIES_FILENAME):
         try:
             driver.add_cookie(cookie)
         except Exception as e:
-            print(e)
+            print('[cookies] failed to load a cookie')
+            # print(e)
     print(f"[cookies] {len(cookies)} cookies loaded")
