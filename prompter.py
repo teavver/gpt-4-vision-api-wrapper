@@ -65,10 +65,8 @@ class Prompter:
         cookies.save_cookies(self.driver)
         return
     
-    def vision_prompt(self, img_path:str, prompt:str):
+    def vision_prompt(self, prompt:str):
         self.driver.get(config.OPENAI_LOGIN_URL)
-        # time.sleep(0.25)
-        
         if not self.cookies_present:
             print("[prompter] no cookies file found. initializing first time login")
             self.init_cookies()
@@ -92,8 +90,7 @@ class Prompter:
 
         file_inputs = self.driver.find_elements(By.XPATH, '//input[@type="file"]')
         if len(file_inputs) > 0:
-            full_img_path = os.path.join(os.getcwd() + "/" + img_path)
-            file_inputs[0].send_keys(full_img_path)
+            file_inputs[0].send_keys(config.IMG_SAVE_PATH)
             time.sleep(0.25)
             
         prompt_textarea = self.find_elem_with_timeout(By.ID, "prompt-textarea")
@@ -111,14 +108,14 @@ class Prompter:
             print("[prompter] timed out waiting for send btn")
 
         # capture the response
-        response_timeout = 180
+        response_timeout = 240
         response_locator = (By.CSS_SELECTOR, '.markdown.prose')
         try:
             response = WebDriverWait(self.driver, response_timeout).until(
                 GPTResponse(response_locator)
             )
-            print(response.text)
+            print(f"[prompter] response: {response.text}")
         except TimeoutException:
             print("[prompter] timed out waiting for response")
 
-        time.sleep(1000)
+        return response.text
