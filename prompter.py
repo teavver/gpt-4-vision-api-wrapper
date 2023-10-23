@@ -30,6 +30,14 @@ class Prompter:
         self.driver = driver
         self.cookies_present = cookies.check_cookies()
 
+    def navigate_to_url(self, target_url:str, max_wait:int = 15):
+        if self.driver.current_url != target_url:
+            self.driver.get(target_url)
+            WebDriverWait(self.driver, max_wait).until(
+                lambda d: d.current_url == target_url,
+                f"[prompter] failed to navigate to {target_url} in {max_wait} seconds."
+            )
+
     def find_elem_with_timeout(self, by:By, selector:str, max_timeout:int = 10):
         try:
             element = WebDriverWait(self.driver, max_timeout).until(
@@ -41,8 +49,24 @@ class Prompter:
         except TimeoutException:
             print(f"[prompter] timeout - failed to find element `{selector}`")
             return None
+        
+    def login_and_navigate_to_gpt4(self):
+        if not self.cookies_present:
+            print("[prompter] no cookies file found. initializing first-time login.")
+            self.init_cookies()
+        else:
+            cookies.load_cookies(self.driver)
+            self.driver.refresh()
+            print("[prompter] cookies loaded. refreshed page.")
 
-    # one-time login to save all .openai.com cookies
+        time.sleep(10000)
+
+        self.navigate_to_url(config.OPENAI_BASE_URL)
+        print('test')
+        time.sleep(1.5)
+        self.navigate_to_url(config.OPENAI_GPT4_URL)
+
+    # one-time login to save cookies for future requests
     def init_cookies(self):
         self.driver.save_screenshot('debug_screenshot_cookies.png')
         self.driver.get(config.OPENAI_LOGIN_URL)
@@ -59,25 +83,17 @@ class Prompter:
         if not pwd_input: return
         pwd_input.send_keys(config.OPENAI_PWD)
 
-        continue_btn = self.find_elem_with_timeout(By.CLASS_NAME, "_button-login-password")
+        continue_btn = self.find_elem_with_timeout(By.CSS_SELECTOR, 'button[data-action-button-primary="true"]')
         if not continue_btn: return
+        WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-action-button-primary="true"]')))
+        time.sleep(0.5) # important delay
         continue_btn.click()
-
         cookies.save_cookies(self.driver)
         return
     
     def vision_prompt(self, prompt:str):
-        self.driver.get(config.OPENAI_LOGIN_URL)
-        if not self.cookies_present:
-            print("[prompter] no cookies file found. initializing first time login")
-            self.init_cookies()
-        else:
-            cookies.load_cookies(self.driver)
 
-        time.sleep(0.75)
-        self.driver.refresh()
-        time.sleep(0.25)
-        self.driver.get(config.OPENAI_GPT4_URL)
+        self.login_and_navigate_to_gpt4()
 
         time.sleep(5) # DEBUG
         self.driver.save_screenshot('debug_screenshot.png')
