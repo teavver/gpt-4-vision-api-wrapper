@@ -38,6 +38,16 @@ class Prompter:
                 f"[prompter] failed to navigate to {target_url} in {max_wait} seconds."
             )
 
+    def check_for_error_message(self):
+        error_message_locator = (By.XPATH, '//div[@class="mb-3 text-center text-xs" and text()="There was an error generating a response"]')
+        try:
+            error_element = WebDriverWait(self.driver, 5).until(
+                EC.presence_of_element_located(error_message_locator)
+            )
+            return error_element.text
+        except TimeoutException:
+            return None
+
     def find_elem_with_timeout(self, by:By, selector:str, max_timeout:int = 10):
         try:
             element = WebDriverWait(self.driver, max_timeout).until(
@@ -51,19 +61,15 @@ class Prompter:
             return None
         
     def login_and_navigate_to_gpt4(self):
+        self.navigate_to_url(config.OPENAI_LOGIN_URL)
         if not self.cookies_present:
             print("[prompter] no cookies file found. initializing first-time login.")
             self.init_cookies()
         else:
+            self.driver.delete_all_cookies()
             cookies.load_cookies(self.driver)
             self.driver.refresh()
             print("[prompter] cookies loaded. refreshed page.")
-
-        time.sleep(10000)
-
-        self.navigate_to_url(config.OPENAI_BASE_URL)
-        print('test')
-        time.sleep(1.5)
         self.navigate_to_url(config.OPENAI_GPT4_URL)
 
     # one-time login to save cookies for future requests
@@ -88,6 +94,7 @@ class Prompter:
         WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-action-button-primary="true"]')))
         time.sleep(0.5) # important delay
         continue_btn.click()
+        WebDriverWait(self.driver, 15).until(EC.url_contains('chat.openai.com'))
         cookies.save_cookies(self.driver)
         return
     
@@ -95,26 +102,23 @@ class Prompter:
 
         self.login_and_navigate_to_gpt4()
 
-        time.sleep(5) # DEBUG
-        self.driver.save_screenshot('debug_screenshot.png')
+        # self.driver.save_screenshot('debug_screenshot.png')
+        # time.sleep(10000) # HEADLESS DEBUG
 
         # close the welcome pop-up
         welcome_popup = self.find_elem_with_timeout(By.XPATH, '//button[.//div[text()="Okay, let’s go"]]')
-        if not welcome_popup: return
-        welcome_popup.click()
-        time.sleep(0.25)
+        if welcome_popup: 
+            welcome_popup.click()
 
         # and the second one
         search_with_imgs_popup = self.find_elem_with_timeout(By.XPATH, "//*[contains(@class, '-my-1') and contains(@class, '-mr-1') and contains(@class, 'p-1') and contains(@class, 'opacity-70')]")
-        if not search_with_imgs_popup: return
-        search_with_imgs_popup.click()
-        time.sleep(0.25)
+        if search_with_imgs_popup:
+            search_with_imgs_popup.click()
 
         file_inputs = self.driver.find_elements(By.XPATH, '//input[@type="file"]')
         if len(file_inputs) == 0:
             return print("[prompter] file input not found")
         file_inputs[0].send_keys(config.IMG_SAVE_PATH)
-        time.sleep(0.25)
             
         prompt_textarea = self.find_elem_with_timeout(By.ID, "prompt-textarea")
         if not prompt_textarea: return
@@ -140,5 +144,9 @@ class Prompter:
             print(f"[prompter] response: {response.text}")
         except TimeoutException:
             print("[prompter] timed out waiting for response")
+
+        error_message = self.check_for_error_message()
+        if error_message:
+            return error_message
 
         return response.text
