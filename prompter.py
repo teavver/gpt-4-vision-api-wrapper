@@ -71,6 +71,7 @@ class Prompter:
             self.driver.refresh()
             print("[prompter] cookies loaded. refreshed page.")
         self.navigate_to_url(config.OPENAI_GPT4_URL)
+        return
 
     # one-time login to save cookies for future requests
     def init_cookies(self):
@@ -102,18 +103,15 @@ class Prompter:
 
         self.login_and_navigate_to_gpt4()
 
-        # self.driver.save_screenshot('debug_screenshot.png')
-        # time.sleep(10000) # HEADLESS DEBUG
-
         # close the welcome pop-up
         welcome_popup = self.find_elem_with_timeout(By.XPATH, '//button[.//div[text()="Okay, let’s go"]]')
-        if welcome_popup: 
-            welcome_popup.click()
+        if not welcome_popup: return
+        welcome_popup.click()
 
         # and the second one
         search_with_imgs_popup = self.find_elem_with_timeout(By.XPATH, "//*[contains(@class, '-my-1') and contains(@class, '-mr-1') and contains(@class, 'p-1') and contains(@class, 'opacity-70')]")
-        if search_with_imgs_popup:
-            search_with_imgs_popup.click()
+        if not search_with_imgs_popup: return
+        search_with_imgs_popup.click()
 
         file_inputs = self.driver.find_elements(By.XPATH, '//input[@type="file"]')
         if len(file_inputs) == 0:
@@ -133,8 +131,10 @@ class Prompter:
             send_btn.click()
         except TimeoutException:
             print("[prompter] timed out waiting for send btn")
+        
+        print("[prompter] prompt sent, waiting for response.")
 
-        # capture the response
+        # await the full response and capture
         response_timeout = 240
         response_locator = (By.CSS_SELECTOR, '.markdown.prose')
         try:
