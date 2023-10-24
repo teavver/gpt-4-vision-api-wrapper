@@ -10,14 +10,26 @@ This project is just a shitty scrap. I do not have plans to maintain, upgrade, o
 
 ## Usage
 
-1) Install packages: `python installer.py`
-2) Set up .env with `OPENAI_LOGIN` and `OPENAI_PWD` - they are required only for the first-time setup to login and save the session cookies. this ensures faster future requests. If you prefer to import your session manually, make sure the file is called `cookies.pkl` and in base directory.
+1) Install packages with `python installer.py`
+2) Set up .env with `OPENAI_LOGIN` and `OPENAI_PWD` - required for first-time setup (save the session cookies to .pkl), this ensures faster future requests. If you prefer to import your session manually, make sure the file is called `cookies.pkl` and is in base directory.
 3) Start the local Api
 
 Request schema: `POST`, `/prompt`
 ```json
 {
-    "b64str": "base64 encoded string of your image",
+    "b64str": "image in b64 string",
+    // OR
+    "url": "url to image",
     "prompt": "the prompt bro"
 }
 ```
+
+You can use either b64str or url, not both. Supported image formats (url):
+- .webp
+- .jpg
+- .jpeg
+- .png
+- .gif
+- .jfif
+- .pjp
+- .pjpeg

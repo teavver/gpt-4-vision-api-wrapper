@@ -51,9 +51,7 @@ class Prompter:
     def find_elem_with_timeout(self, by:By, selector:str, max_timeout:int = 10):
         try:
             element = WebDriverWait(self.driver, max_timeout).until(
-                # EC.presence_of_element_located((by, selector))
                 EC.element_to_be_clickable((by, selector))
-                # EC.visibility_of_element_located((by, selector))
             )
             return element
         except TimeoutException:
