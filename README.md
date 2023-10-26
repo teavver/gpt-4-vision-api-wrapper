@@ -4,9 +4,10 @@ Demo wrapper for gpt4-v via api
 
 # ❗ IMPORTANT ❗
 
-Cloudflare has introduced [Turnstile](https://blog.cloudflare.com/turnstile-private-captcha-alternative/), a new CAPTCHA system
-This broke tools like undetected_chromedriver and others.
-As a result, this script is **not** stable. You might be able to send a few successful requests, but it's likely not going to work at all. I'll update this repo as soon as I get a working fix
+Cloudflare has introduced [Turnstile](https://blog.cloudflare.com/turnstile-private-captcha-alternative/) - a new CAPTCHA system.
+This broke tools like `undetected_chromedriver` and similar ones.
+As a result, this script is **not** stable. You might be able to send a few successful requests, but it's likely not going to work at all.  
+I'll update this repo as soon as I get a working fix
 
 ## Why?
 
