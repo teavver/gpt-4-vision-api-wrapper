@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 # load env
 load_dotenv()
 if not os.getenv("OPENAI_LOGIN") or not os.getenv("OPENAI_PWD"):
-    raise TypeError("[config] missing keys in .env")
+    raise TypeError("[config] missing keys in .env. Check the docs or config.py")
 
 # Credentials
 OPENAI_LOGIN = os.getenv("OPENAI_LOGIN")

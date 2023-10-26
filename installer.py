@@ -2,7 +2,7 @@ import subprocess
 
 def install_requirements():
     try:
-        subprocess.run(["python", "-m", "pip", "install", "--upgrade", "pip", "setuptools"], check=True)
+        subprocess.run(["python", "-m", "pip", "install", "--upgrade", "pip", "setuptools", "--user"], check=True)
     except Exception as e:
         print(f"Error updating pip and setuptools: {e}")
         return
@@ -10,7 +10,7 @@ def install_requirements():
         packages = f.read().strip().splitlines()
     for package in packages:
         try:
-            subprocess.run(["python", "-m", "pip", "install", package], check=True)
+            subprocess.run(["python", "-m", "pip", "install", "--user", package], check=True)
         except Exception as e:
             print(f"Error installing {package}: {e}")
 
