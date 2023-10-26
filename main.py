@@ -1,9 +1,8 @@
-from fastapi import FastAPI, Response, status, requests
+from fastapi import FastAPI, Response, status
 from pydantic import BaseModel, validator
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-import prompter , uvicorn, config, utils
+import prompter , uvicorn, config, utils, time
 from typing import Optional
+import undetected_chromedriver as uc
 
 app = FastAPI()
 
@@ -20,17 +19,10 @@ def check_input(cls, b64str, values):
 
 @app.post("/prompt")
 async def handle_vision_prompt(vp: VisionPrompt, response: Response):
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_experimental_option("prefs", {
-        "profile.default_content_setting_values.media_stream_mic": 2,
-        "profile.default_content_setting_values.media_stream_camera": 2,
-        "profile.default_content_setting_values.geolocation": 2,
-        "profile.default_content_setting_values.notifications": 2
-    })
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36")
-    driver = webdriver.Chrome(options=options)
+
+    options = uc.ChromeOptions()
+    options.add_argument('--headless')
+    driver = uc.Chrome(options=options, use_subprocess=True)
     p = prompter.Prompter(driver)
 
     try:
