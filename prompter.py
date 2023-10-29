@@ -4,7 +4,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
-import config, time, cookies
+import config, time, cookies, random, json
+
+
 
 class GPTResponse:
     def __init__(self, locator):
@@ -30,13 +32,24 @@ class Prompter:
         self.driver = driver
         self.cookies_present = cookies.check_cookies()
 
+
     def navigate_to_url(self, target_url:str, max_wait:int = 15):
         if self.driver.current_url != target_url:
-            self.driver.get(target_url)
+
+            # October 29, 2023 Patch: https://github.com/ultrafunkamsterdam/undetected-chromedriver/issues/1623#issuecomment-1777111043
+            self.driver.execute_script(f"window.open('{target_url}', '_blank');")
+            time.sleep(random.uniform(2.5, 3.5))
+            self.driver.switch_to.window(self.driver.window_handles[1])
+
             WebDriverWait(self.driver, max_wait).until(
                 lambda d: d.current_url == target_url,
                 f"[prompter] failed to navigate to {target_url} in {max_wait} seconds."
             )
+
+    def close_current_tab_and_switch_back(self):
+        if len(self.driver.window_handles) > 1:
+            self.driver.close()
+            self.driver.switch_to.window(self.driver.window_handles[0])
 
     def check_for_error_message(self):
         error_message_locator = (By.XPATH, '//div[@class="mb-3 text-center text-xs" and text()="There was an error generating a response"]')
@@ -53,13 +66,13 @@ class Prompter:
             element = WebDriverWait(self.driver, max_timeout).until(
                 EC.element_to_be_clickable((by, selector))
             )
+            time.sleep(random.uniform(1.25, 1.85))
             return element
         except TimeoutException:
             print(f"[prompter] timeout - failed to find element `{selector}`")
             return None
         
     def login_and_navigate_to_gpt4(self):
-        self.navigate_to_url(config.OPENAI_LOGIN_URL)
         if not self.cookies_present:
             print("[prompter] no cookies file found. initializing first-time login.")
             self.init_cookies()
@@ -69,14 +82,16 @@ class Prompter:
             self.driver.refresh()
             print("[prompter] cookies loaded. refreshed page.")
         self.navigate_to_url(config.OPENAI_GPT4_URL)
+        self.close_current_tab_and_switch_back()
         return
 
     # one-time login to save cookies for future requests
     def init_cookies(self):
-        self.driver.save_screenshot('debug_screenshot_cookies.png')
-        self.driver.get(config.OPENAI_LOGIN_URL)
+        # self.driver.save_screenshot('debug_screenshot_cookies.png')
+        self.navigate_to_url(config.OPENAI_LOGIN_URL)
         log_btn = self.find_elem_with_timeout(By.CSS_SELECTOR, '[data-testid="login-button"]')
         if not log_btn: return
+        print("login click")
         log_btn.click()
         
         login_input = self.find_elem_with_timeout(By.ID, "username")

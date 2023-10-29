@@ -2,12 +2,7 @@
 
 Demo wrapper for gpt4-v via api
 
-# ❗ WARNING ❗
-
-The undetected_chromedriver package seems to not be working at all anymore. The owner said he's working on a [rewrite](https://github.com/ultrafunkamsterdam/undetected-chromedriver/issues/1589#issuecomment-1753202687).
-As a result, this script is **not** stable. You might be able to send a few successful requests, but it's likely not going to work at all.  
-
-## Why?
+## About
 
 This project was developed as a small service for my personal needs. While it was primarily designed for my specific use-case, I hope that it can be useful to others who might find it relevant for their purposes.
 
