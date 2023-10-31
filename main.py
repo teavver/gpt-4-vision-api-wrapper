@@ -19,8 +19,9 @@ def check_input(cls, b64str, values):
 
 @app.post("/prompt")
 async def handle_vision_prompt(vp: VisionPrompt, response: Response):
+
     chrome_opts = webdriver.ChromeOptions()
-    # chrome_opts.add_argument('--headless')
+    # chrome_opts.add_argument("--headless") --- HEADLESS DOES NOT WORK ---
     chrome_opts.add_argument("--disable-blink-features=AutomationControlled")
     chrome_opts.add_experimental_option("prefs", {
         "profile.default_content_setting_values.media_stream_mic": 2,

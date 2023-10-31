@@ -17,7 +17,7 @@ def save_image_from_url(url: str, save_path: str) -> bool:
             f.write(response.content)
         return True
     except requests.RequestException as e:
-        print(f"Error fetching image from URL: {e}")
+        print(f"[utils] error fetching image from URL: {e}")
         return False
 
 def handle_img(save_path: str, input_str: str) -> bool:
@@ -28,7 +28,7 @@ def handle_img(save_path: str, input_str: str) -> bool:
     try:
         imgdata = base64.b64decode(input_str)
     except (binascii.Error, ValueError) as e:
-        print(f"Error decoding base64 string: {e}")
+        print(f"[utils] error decoding base64 string: {e}")
         return False
 
     image = Image.open(io.BytesIO(imgdata))

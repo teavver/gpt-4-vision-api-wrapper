@@ -2,6 +2,11 @@
 
 Demo wrapper for gpt4-v via api
 
+## 31.10.2023 Update
+
+The current version **should** be stable and working (no support for headless mode for now). I've managed to fix the Cloudflare problem for now.
+If you encounter any problems, please open an [Issue](https://github.com/teavver/gpt4-vision-api-wrapper/issues).
+
 ## About
 
 This project was developed as a small service for my personal needs. While it was primarily designed for my specific use-case, I hope that it can be useful to others who might find it relevant for their purposes.
