@@ -17,6 +17,10 @@ Until the official API is released, I am open to suggestions and will try to imp
 
 Contributions are more than welcome. If you have any improvement ideas or bug fixes, feel free to submit a pull request.
 
+## Config
+
+Please modify the config.py file to your needs. The default port is `5100`, and the default login method is `OPENAI`. You can also use a Google account for the first-time setup. Your credentials in the `.env` file should match your preferred login method.
+
 ## How to use
 
 1) Install packages with `installer.py` (make sure you're running your shell with admin privileges)

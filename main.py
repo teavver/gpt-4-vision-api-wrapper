@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Response, status
 from pydantic import BaseModel, validator
-import prompter , uvicorn, config, utils
+import prompter , uvicorn, config, utils, time
 from typing import Optional
 from seleniumbase import Driver
 
@@ -26,10 +26,9 @@ async def handle_vision_prompt(vp: VisionPrompt, response: Response):
         incognito=True,
         agent=config.USER_AGENT,
         do_not_track=True,
-        undetectable=True
+        undetectable=True,
     )
-    p = prompter.Prompter(driver)
-
+    p = prompter.Prompter(driver, config.LOGIN_METHOD)
     try:
         if vp.url and vp.b64str:
             response.status_code = status.HTTP_400_BAD_REQUEST

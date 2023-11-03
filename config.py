@@ -1,12 +1,22 @@
 import os
 from dotenv import load_dotenv
+from enum import Enum
 
 # load env
 load_dotenv()
 if not os.getenv("OPENAI_LOGIN") or not os.getenv("OPENAI_PWD"):
     raise TypeError("[config] missing keys in .env. Check the docs or config.py")
 
-# Credentials
+class LoginMethod(Enum):
+    OPENAI = 1
+    GOOGLE = 2
+
+# Login method
+LOGIN_METHOD = LoginMethod['OPENAI'].value
+# ___________________________^^^^______ Change this to 'GOOGLE' if you prefer
+#                                       to log in using a Google account (first-time setup only)
+
+# Credentials (for your selected login type)
 OPENAI_LOGIN = os.getenv("OPENAI_LOGIN")
 OPENAI_PWD = os.getenv("OPENAI_PWD")
 

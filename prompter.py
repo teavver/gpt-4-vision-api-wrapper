@@ -5,8 +5,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
 import config, time, cookies, random
+from utils import logger
 
-
+MODULE = "prompter"
 
 class GPTResponse:
     def __init__(self, locator):
@@ -28,10 +29,10 @@ class GPTResponse:
 
 class Prompter:
 
-    def __init__(self, driver:WebDriver):
+    def __init__(self, driver:WebDriver, login_method:int):
         self.driver = driver
         self.cookies_present = cookies.check_cookies()
-
+        self.login_method = login_method
 
     def navigate_to_url(self, target_url:str, max_wait:int = 15):
         if self.driver.current_url != target_url:
@@ -45,7 +46,7 @@ class Prompter:
             
             WebDriverWait(self.driver, max_wait).until(
                 lambda d: d.current_url == target_url,
-                f"[prompter] failed to navigate to {target_url} in {max_wait} seconds."
+                logger(MODULE, f"failed to navigate to {target_url} in {max_wait} seconds.")
             )
 
     def check_for_error_message(self):
@@ -66,20 +67,20 @@ class Prompter:
             time.sleep(random.uniform(1.25, 1.85))
             return element
         except TimeoutException:
-            print(f"[prompter] timeout - failed to find element `{selector}`")
+            logger(MODULE, f"timeout - failed to find element `{selector}`")
             return None
         
     def login_and_navigate_to_gpt4(self):
         self.navigate_to_url(config.OPENAI_LOGIN_URL)
         if not self.cookies_present:
-            print("[prompter] no cookies file found. initializing first-time login.")
+            logger(MODULE, f"no cookies file found. initializing first-time login. Method = {config.LoginMethod(self.login_method).name}")
             self.init_cookies()
         else:
             self.driver.delete_all_cookies()
             cookies.load_cookies(self.driver)
             time.sleep(1)
             self.driver.refresh()
-            print("[prompter] cookies loaded. refreshed page.")
+            logger(MODULE, "cookies loaded. refreshed page.")
         self.navigate_to_url(config.OPENAI_GPT4_URL)
         return
 
@@ -87,23 +88,52 @@ class Prompter:
     def init_cookies(self):
         log_btn = self.find_elem_with_timeout(By.CSS_SELECTOR, '[data-testid="login-button"]')
         if not log_btn: return
-        print("[prompter] login btn click")
+        logger(MODULE, "login btn click")
         log_btn.click()
         
-        login_input = self.find_elem_with_timeout(By.ID, "username")
-        if not login_input: return
-        login_input.send_keys(config.OPENAI_LOGIN)
-        login_input.send_keys(Keys.RETURN)
-        
-        pwd_input = self.find_elem_with_timeout(By.ID, "password")
-        if not pwd_input: return
-        pwd_input.send_keys(config.OPENAI_PWD)
+        # Login using google account
+        if config.LoginMethod(self.login_method).name == "GOOGLE":
+            google_login_btn = self.find_elem_with_timeout(By.XPATH, "//button[contains(., 'Continue with Google')]")
+            if not google_login_btn: return
+            logger(MODULE, "google login btn click")
+            google_login_btn.click()
 
-        continue_btn = self.find_elem_with_timeout(By.CSS_SELECTOR, 'button[data-action-button-primary="true"]')
-        if not continue_btn: return
-        WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-action-button-primary="true"]')))
-        time.sleep(0.5) # important delay
-        continue_btn.click()
+            email_input = self.find_elem_with_timeout(By.XPATH, "//input[@type='email' and @name='identifier']")
+            if not email_input: return
+            logger(MODULE, "google email input")
+            email_input.send_keys(config.OPENAI_LOGIN)
+
+            next_btn = self.find_elem_with_timeout(By.XPATH, "//button[contains(., 'Next')]")
+            if not next_btn: return
+            next_btn.click()
+
+            pwd_input = self.find_elem_with_timeout(By.XPATH, "//input[@type='password' and @name='Passwd']")
+            if not pwd_input: return
+            logger(MODULE, "google pwd input")
+            pwd_input.send_keys(config.OPENAI_PWD)
+
+            next_btn = self.find_elem_with_timeout(By.XPATH, "//button[contains(., 'Next')]")
+            if not next_btn: return
+            next_btn.click()
+
+        # Login using OpenAI account
+        else:
+            login_input = self.find_elem_with_timeout(By.ID, "username")
+            if not login_input: return
+            login_input.send_keys(config.OPENAI_LOGIN)
+            login_input.send_keys(Keys.RETURN)
+            
+            pwd_input = self.find_elem_with_timeout(By.ID, "password")
+            if not pwd_input: return
+            pwd_input.send_keys(config.OPENAI_PWD)
+
+            continue_btn = self.find_elem_with_timeout(By.CSS_SELECTOR, 'button[data-action-button-primary="true"]')
+            if not continue_btn: return
+            WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[data-action-button-primary="true"]')))
+            time.sleep(0.5) # important delay
+            continue_btn.click()
+
+        # Save cookies
         WebDriverWait(self.driver, 15).until(EC.url_contains('chat.openai.com'))
         cookies.save_cookies(self.driver)
         return
@@ -124,7 +154,7 @@ class Prompter:
 
         file_inputs = self.driver.find_elements(By.XPATH, '//input[@type="file"]')
         if len(file_inputs) == 0:
-            return print("[prompter] file input not found")
+            return logger(MODULE, "file input not found")
         file_inputs[0].send_keys(config.IMG_SAVE_PATH)
             
         prompt_textarea = self.find_elem_with_timeout(By.ID, "prompt-textarea")
@@ -139,9 +169,9 @@ class Prompter:
             )
             send_btn.click()
         except TimeoutException:
-            print("[prompter] timed out waiting for send btn")
+            logger(MODULE, "timed out waiting for send btn")
         
-        print("[prompter] prompt sent, waiting for response.")
+        logger(MODULE, "prompt sent, waiting for response.")
 
         # await the full response and capture
         response_timeout = 240
@@ -150,9 +180,9 @@ class Prompter:
             response = WebDriverWait(self.driver, response_timeout).until(
                 GPTResponse(response_locator)
             )
-            print(f"[prompter] response: {response.text}")
+            logger(MODULE, f"response: {response.text}")
         except TimeoutException:
-            print("[prompter] timed out waiting for response")
+            logger(MODULE, "timed out waiting for response")
 
         error_message = self.check_for_error_message()
         if error_message:

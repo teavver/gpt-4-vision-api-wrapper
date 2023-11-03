@@ -1,6 +1,9 @@
 import base64, io, binascii, requests
+from datetime import datetime
 from urllib.parse import urlparse
 from PIL import Image
+
+MODULE = "utils"
 
 def is_valid_img_url(s: str) -> bool:
     parsed_url = urlparse(s)
@@ -17,7 +20,7 @@ def save_image_from_url(url: str, save_path: str) -> bool:
             f.write(response.content)
         return True
     except requests.RequestException as e:
-        print(f"[utils] error fetching image from URL: {e}")
+        logger(MODULE, f"error fetching image from URL: {e}")
         return False
 
 def handle_img(save_path: str, input_str: str) -> bool:
@@ -28,9 +31,13 @@ def handle_img(save_path: str, input_str: str) -> bool:
     try:
         imgdata = base64.b64decode(input_str)
     except (binascii.Error, ValueError) as e:
-        print(f"[utils] error decoding base64 string: {e}")
+        logger(MODULE, f"error decoding base64 string: {e}")
         return False
 
     image = Image.open(io.BytesIO(imgdata))
     image.save(save_path, 'PNG')
     return True
+
+def logger(module:str, msg:str):
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    print(f"{timestamp} [{module}]: {msg}")

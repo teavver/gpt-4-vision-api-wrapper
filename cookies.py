@@ -1,6 +1,8 @@
 import pickle, os.path
 from selenium.webdriver.remote.webdriver import WebDriver
+from utils import logger
 
+MODULE = "cookies"
 COOKIES_FILENAME = "cookies.pkl"
 
 def check_cookies() -> bool:
@@ -9,7 +11,7 @@ def check_cookies() -> bool:
 def save_cookies(driver:WebDriver, path:str = COOKIES_FILENAME):
     cookies = driver.get_cookies()
     pickle.dump(cookies, open(path, "wb"))
-    print(f"[cookies] {len(cookies)} cookies saved")
+    logger(MODULE, f"{len(cookies)} cookies saved")
 
 def load_cookies(driver:WebDriver, path:str = COOKIES_FILENAME):
     cookies = pickle.load(open(path, "rb"))
@@ -18,6 +20,6 @@ def load_cookies(driver:WebDriver, path:str = COOKIES_FILENAME):
         try:
             driver.add_cookie(cookie)
         except Exception as e:
-            print(f'[cookies] failed to load a cookie. domain: {cookie["domain"]}')
+            logger(MODULE, f'failed to load a cookie. domain: {cookie["domain"]}')
             # print(e)
-    print(f"[cookies] {len(cookies)} cookies loaded")
+    logger(MODULE, f"{len(cookies)} cookies loaded")
