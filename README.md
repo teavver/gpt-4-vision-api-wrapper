@@ -64,7 +64,7 @@ curl \
   http://localhost:5100/prompt
 ```
 
-You can use either b64str or url, not both. Supported image formats (url):
+You can use either `b64str` or `url`, not both. Supported image formats (url):
 - .webp
 - .jpg
 - .jpeg
