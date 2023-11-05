@@ -4,7 +4,7 @@ Demo wrapper for gpt4-v via api
 
 ## Update: November 6, 2023
 
-Support for up to 4 image inputs added (4 is the upper limit set by OpenAI). Please check the [Examples](#examples) section.
+Support for up to 4 image inputs added (4 is the upper limit set by OpenAI). Please check the [Examples](#examples) section for the updated schemas.
 
 ## Update: October 31, 2023
 
@@ -70,7 +70,7 @@ curl \
   http://localhost:5100/prompt
 ```
 
-You can use either `b64str` or `url`, not both. Supported image formats (url):
+You can use either `b64str` or `url`, not both. You can't mix up URLs and b64-encoded strings in the same request. Supported image formats (url):
 - .webp
 - .jpg
 - .jpeg
