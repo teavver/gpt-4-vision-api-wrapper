@@ -1,24 +1,20 @@
-from fastapi import FastAPI, Response, status
-from pydantic import BaseModel, validator
-import prompter , uvicorn, config, utils, time
-from typing import Optional
+from fastapi import FastAPI, Response, status, HTTPException
+from pydantic import BaseModel
+import prompter, uvicorn, config, utils
+from pathlib import Path
+from typing import Optional, List
+from utils import handle_img
 from seleniumbase import Driver
 
 app = FastAPI()
 
 class VisionPrompt(BaseModel):
-    b64str: Optional[str]
-    url: Optional[str]
+    b64_imgs: Optional[List[str]]
+    url_imgs: Optional[List[str]]
     prompt: str
 
-@validator('b64str', 'url', pre=True, always=True)
-def check_input(cls, b64str, values):
-        if not b64str and not values.get('url'):
-            raise ValueError("Either b64 string or valid URL must be provided.")
-        return b64str
-
 @app.post("/prompt")
-async def handle_vision_prompt(vp: VisionPrompt, response: Response):
+async def handle_vision_prompt(vp: VisionPrompt):
     driver = Driver(
         browser="chrome",
         uc=True,
@@ -30,25 +26,26 @@ async def handle_vision_prompt(vp: VisionPrompt, response: Response):
     )
     p = prompter.Prompter(driver, config.LOGIN_METHOD)
     try:
-        if vp.url and vp.b64str:
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            return {"error": "Please provide either a b64 string or a URL, not both"}
-        if vp.url:
-            if not utils.is_valid_img_url(vp.url):
-                response.status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
-                return {"error": "Invalid image URL"}
-            if not utils.save_image_from_url(vp.url, config.IMG_SAVE_PATH):
-                response.status_code = status.HTTP_400_BAD_REQUEST
-                return {"error": "Failed to fetch image from URL"}
-        elif vp.b64str:
-            img_res = utils.handle_img(config.IMG_SAVE_PATH, vp.b64str)
-            if img_res == False:
-                response.status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
-                return {"error": "Failed to handle base64 image data"}
-        else:
-            response.status_code = status.HTTP_400_BAD_REQUEST
-            return {"error": "No image data provided"}
+        if vp.url_imgs and vp.b64_imgs:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Please provide either base64 strings or URLs, not both")
+        if (vp.url_imgs and len(vp.url_imgs) > 4) or (vp.b64_imgs and len(vp.b64_imgs) > 4):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A maximum of 4 images can be provided.")
 
+        # clear img cache before handling input imgs
+        [f.unlink() for f in Path(config.IMG_CACHE_PATH).glob("*") if f.is_file()]
+
+        if vp.url_imgs:
+            for img_url in vp.url_imgs:
+                img_res = handle_img(img_url)
+                if not img_res:
+                    raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Failed to handle one of the inputs URL")
+        elif vp.b64_imgs:
+            for b64str in vp.b64_imgs:
+                img_res = handle_img(b64str)
+                if not img_res:
+                    raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Failed to handle base64 image data")
+        else:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No image data provided")
         return p.vision_prompt(vp.prompt)
 
     finally:

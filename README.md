@@ -2,6 +2,10 @@
 
 Demo wrapper for gpt4-v via api
 
+## Update: November 6, 2023
+
+Support for up to 4 image inputs added (4 is the upper limit set by OpenAI). Please check the [Examples](#examples) section.
+
 ## Update: October 31, 2023
 
 The current version **should** be stable and working (using the default config).  
@@ -39,18 +43,20 @@ Please modify the [config.py](https://github.com/teavver/gpt-4-vision-api-wrappe
 Body:
 
 ```json
+
 {
-    "b64str": "image in b64 string",
-    "prompt": "the prompt bro"
+    "b64_imgs": ["up to 4 images in b64-string format"],
+    "prompt": "your prompt"
 }
+
 ```
 
 OR
 
 ```json
 {
-    "url": "url to your input image",
-    "prompt": "the prompt bro"
+    "url_imgs": ["up to 4 image URLs", "second img", "etc..."],
+    "prompt": "your prompt"
 }
 ```
 
@@ -60,7 +66,7 @@ cURL:
 curl \
   -H 'Content-Type: application/json' \
   -X POST \
-  -d '{"url": "https://twpark.com/wp-content/uploads/2021/09/amara-1.jpeg", "prompt": "Describe this image"}' \
+  -d '{"url_imgs": ["https://twpark.com/wp-content/uploads/2021/09/amara-1.jpeg"], "prompt": "Describe this image"}' \
   http://localhost:5100/prompt
 ```
 
