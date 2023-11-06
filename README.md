@@ -4,6 +4,8 @@ Demo wrapper for gpt4-v via api
 
 ## Update: November 6, 2023
 
+OpenAI has finally released GPT-4-Vision API. I'm archiving this project as it is no longer needed and should not be used. Please use the [official API](https://platform.openai.com/docs/guides/vision) instead. Thanks to everyone who supported this little project.
+
 Support for up to 4 image inputs added (4 is the upper limit set by OpenAI). Please check the [Examples](#examples) section for the updated schemas.
 
 ## Update: October 31, 2023
